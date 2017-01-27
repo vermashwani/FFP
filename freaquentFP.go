@@ -20,6 +20,28 @@ type FFP struct {
 
 // Application is for storing retreived Application
 
+type ApplicationValue struct{	
+	ApplicationId string `json:"applicationId"`
+	PassportNumber string `json:"passportNumber"`
+	Status string `json:"status"`
+	Title string `json:"title"`
+	FirstName string `json:"firstName"`
+	LastName string `json:"lastName"`
+	Gender string `json:"gender"`
+	Dob string `json:"dob"`
+	Age string `json:"age"`
+	MartialStatus string `json:"martialStatus"`
+	Nationality string `json:"nationality"`
+	PanNumber string `json:"panNumber"`
+	AadharNumber string `json:"aadharNumber"`
+	MembershipType string `json:"membershipType"`
+	RoaltyPoints string `json:"roaltyPoints"`
+
+}
+
+
+// Application is for storing retreived Application
+
 type Application struct{	
 	RoaltyPoints string `json:"roaltyPoints"`
 }
@@ -38,7 +60,7 @@ func (t *FFP) Init(stub shim.ChaincodeStubInterface, function string, args []str
 	// Create application Table
 	err = stub.CreateTable("ApplicationTable", []*shim.ColumnDefinition{
 		&shim.ColumnDefinition{Name: "applicationId", Type: shim.ColumnDefinition_STRING, Key: true},
-		&shim.ColumnDefinition{Name: "passportNumber", Type: shim.ColumnDefinition_STRING, Key: true},
+		&shim.ColumnDefinition{Name: "passportNumber", Type: shim.ColumnDefinition_STRING, Key: false},
 		&shim.ColumnDefinition{Name: "status", Type: shim.ColumnDefinition_STRING, Key: false},
 		&shim.ColumnDefinition{Name: "title", Type: shim.ColumnDefinition_STRING, Key: false},
 		&shim.ColumnDefinition{Name: "firstName", Type: shim.ColumnDefinition_STRING, Key: false},
@@ -48,8 +70,8 @@ func (t *FFP) Init(stub shim.ChaincodeStubInterface, function string, args []str
 		&shim.ColumnDefinition{Name: "age", Type: shim.ColumnDefinition_STRING, Key: false},
 		&shim.ColumnDefinition{Name: "martialStatus", Type: shim.ColumnDefinition_STRING, Key: false},
 		&shim.ColumnDefinition{Name: "nationality", Type: shim.ColumnDefinition_STRING, Key: false},
-		&shim.ColumnDefinition{Name: "panNumber", Type: shim.ColumnDefinition_STRING, Key: true},
-		&shim.ColumnDefinition{Name: "aadharNumber", Type: shim.ColumnDefinition_STRING, Key: true},
+		&shim.ColumnDefinition{Name: "panNumber", Type: shim.ColumnDefinition_STRING, Key: false},
+		&shim.ColumnDefinition{Name: "aadharNumber", Type: shim.ColumnDefinition_STRING, Key: false},
 		&shim.ColumnDefinition{Name: "membershipType", Type: shim.ColumnDefinition_STRING, Key: false},
 		&shim.ColumnDefinition{Name: "roaltyPoints", Type: shim.ColumnDefinition_STRING, Key: false},
 	})
@@ -381,6 +403,63 @@ func (t *FFP) getMile(stub shim.ChaincodeStubInterface, args []string) ([]byte, 
 }
 
 
+func (t *FFP) getApplication(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+
+	if len(args) != 1 {
+		return nil, errors.New("Incorrect number of arguments. Expecting applicationid to query")
+	}
+
+	applicationId := args[0]
+	
+
+	// Get the row pertaining to this applicationId
+	var columns []shim.Column
+	col1 := shim.Column{Value: &shim.Column_String_{String_: applicationId}}
+	columns = append(columns, col1)
+
+	row, err := stub.GetRow("ApplicationTable", columns)
+	if err != nil {
+		jsonResp := "{\"Error\":\"Failed to get the data for the application " + applicationId + "\"}"
+		return nil, errors.New(jsonResp)
+	}
+
+	// GetRows returns empty message if key does not exist
+	if len(row.Columns) == 0 {
+		jsonResp := "{\"Error\":\"Failed to get the data for the application " + applicationId + "\"}"
+		return nil, errors.New(jsonResp)
+	}
+
+	
+	
+	res2E := ApplicationValue{}
+	
+	res2E.ApplicationId = row.Columns[0].GetString_()
+	res2E.PassportNumber = row.Columns[1].GetString_()
+	res2E.Status = row.Columns[2].GetString_()
+	res2E.Title = row.Columns[3].GetString_()
+	res2E.FirstName = row.Columns[4].GetString_()
+	res2E.LastName = row.Columns[5].GetString_()
+	res2E.Gender = row.Columns[6].GetString_()
+	res2E.Dob = row.Columns[7].GetString_()
+	res2E.Age = row.Columns[8].GetString_()
+	res2E.MartialStatus = row.Columns[9].GetString_()
+	res2E.Nationality = row.Columns[10].GetString_()
+	res2E.PanNumber = row.Columns[11].GetString_()
+	res2E.AadharNumber = row.Columns[12].GetString_()
+	res2E.MembershipType = row.Columns[13].GetString_()
+	res2E.RoaltyPoints = row.Columns[14].GetString_()
+	
+	
+    mapB, _ := json.Marshal(res2E)
+    fmt.Println(string(mapB))
+	
+	return mapB, nil
+
+}
+
+
+
+
 // Invoke invokes the chaincode
 func (t *FFP) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 
@@ -457,7 +536,10 @@ func (t *FFP) Query(stub shim.ChaincodeStubInterface, function string, args []st
 		}
 		t := FFP{}
 		return t.getMile(stub, args)		
-	}	
+	} else if function == "getApplication" { 
+		t := FFP{}
+		return t.getApplication(stub, args)
+	}
 	return nil, nil
 }
 
