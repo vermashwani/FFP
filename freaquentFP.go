@@ -54,6 +54,13 @@ type GetMile struct{
 	TotalPoint string `json:"totalPoint"`
 }
 
+// to return the verify result
+type VerifyU struct{	
+	Result string `json:"result"`
+}
+	
+
+
 
 // Init initializes the smart contracts
 func (t *FFP) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
@@ -111,7 +118,7 @@ func (t *FFP) Init(stub shim.ChaincodeStubInterface, function string, args []str
 	stub.PutState("user_type1_1", []byte("etihad"))
 	stub.PutState("user_type1_2", []byte("hertz"))
 	stub.PutState("user_type1_3", []byte("marriot"))
-	stub.PutState("user_type1_4", []byte("wallmart"))	
+	stub.PutState("user_type1_4", []byte("amazon"))	
 	
 	return nil, nil
 }
@@ -494,6 +501,52 @@ func (t *FFP) getUser(stub shim.ChaincodeStubInterface, args []string) ([]byte, 
 }
 
 
+// verify the user is present or not (for internal testing, irrespective of org)
+func (t *FFP) verifyUser(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+
+	if len(args) != 2 {
+		return nil, errors.New("Incorrect number of arguments. Expecting ffId to query")
+	}
+
+	ffId := args[0]
+	dob := args[1]
+	
+
+	// Get the row pertaining to this ffId
+	var columns []shim.Column
+	col1 := shim.Column{Value: &shim.Column_String_{String_: ffId}}
+	columns = append(columns, col1)
+
+	row, err := stub.GetRow("UserDetails", columns)
+	if err != nil {
+		jsonResp := "{\"Error\":\"Failed to get the data for the application " + ffId + "\"}"
+		return nil, errors.New(jsonResp)
+	}
+
+	// GetRows returns empty message if key does not exist
+	if len(row.Columns) == 0 {
+		jsonResp := "{\"Error\":\"Failed to get the data for the application " + ffId + "\"}"
+		return nil, errors.New(jsonResp)
+	}
+
+	userDob := row.Columns[5].GetString_()
+	
+	res2E := VerifyU{}
+	
+	if dob == userDob{
+		res2E.Result="success"
+	}else{
+		res2E.Result="failed"
+	}
+	
+    mapB, _ := json.Marshal(res2E)
+    fmt.Println(string(mapB))
+	
+	return mapB, nil
+
+}
+
+
 
 // Invoke invokes the chaincode
 func (t *FFP) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
@@ -521,10 +574,13 @@ func (t *FFP) Query(stub shim.ChaincodeStubInterface, function string, args []st
 		return t.getTransaction(stub, args)
 	}else if function == "getAllTransaction" { 
 		t := FFP{}
-		return t.getTransaction(stub, args)
+		return t.getAllTransaction(stub, args)
 	} else if function == "getUser" { 
 		t := FFP{}
 		return t.getUser(stub, args)
+	}else if function == "verifyUser" { 
+		t := FFP{}
+		return t.verifyUser(stub, args)
 	}
 	
 	return nil, nil
