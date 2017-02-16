@@ -45,6 +45,8 @@ type Transaction struct{
 	Source string `json:"source"`
 	Points string `json:"points"`
 	Trxntype string `json:"trxntype"`
+	TrxnSubType string `json:"trxnSubType"`
+	Remarks string `json:"remarks"`
 }
 
 
@@ -109,6 +111,8 @@ func (t *FFP) Init(stub shim.ChaincodeStubInterface, function string, args []str
 		&shim.ColumnDefinition{Name: "source", Type: shim.ColumnDefinition_STRING, Key: false},
 		&shim.ColumnDefinition{Name: "points", Type: shim.ColumnDefinition_STRING, Key: false},
 		&shim.ColumnDefinition{Name: "trxntype", Type: shim.ColumnDefinition_STRING, Key: false},
+		&shim.ColumnDefinition{Name: "trxnSubType", Type: shim.ColumnDefinition_STRING, Key: false},
+		&shim.ColumnDefinition{Name: "remarks", Type: shim.ColumnDefinition_STRING, Key: false},
 	})
 	if err != nil {
 		return nil, errors.New("Failed creating ApplicationTable.")
@@ -185,7 +189,7 @@ if len(args) != 12 {
 // add or delete points and insert the transaction(irrespective of org)
 func (t *FFP) addDeleteMile(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 
-	if len(args) != 6 {
+	if len(args) != 8 {
 		return nil, errors.New("Incorrect number of arguments. Expecting 2.")
 	}
 
@@ -199,8 +203,16 @@ func (t *FFP) addDeleteMile(stub shim.ChaincodeStubInterface, args []string) ([]
 	source := assignerOrg
 	points := args[4]
 	trxntype := args[5]
+	trxnSubType := args[6]
+	remarks := args[7]
 	
 	newPoints, _ := strconv.ParseInt(points, 10, 0)
+	
+	//whether ADD_PENDING, DELETE_PENDING 
+	if trxnSubType == "ADD_PENDING" || trxnSubType == "DELETE_PENDING"{
+		newPoints = 0
+	}
+	
 
 	// Get the row pertaining to this ffid
 	var columns []shim.Column
@@ -302,6 +314,8 @@ func (t *FFP) addDeleteMile(stub shim.ChaincodeStubInterface, args []string) ([]
 				&shim.Column{Value: &shim.Column_String_{String_: source}},
 				&shim.Column{Value: &shim.Column_String_{String_: points}},
 				&shim.Column{Value: &shim.Column_String_{String_: trxntype}},
+				&shim.Column{Value: &shim.Column_String_{String_: trxnSubType}},
+				&shim.Column{Value: &shim.Column_String_{String_: remarks}},
 			}})
 
 		if err != nil {
@@ -388,6 +402,8 @@ func (t *FFP) getTransaction(stub shim.ChaincodeStubInterface, args []string) ([
 		newApp.Source = row.Columns[3].GetString_()
 		newApp.Points = row.Columns[4].GetString_()
 		newApp.Trxntype = row.Columns[5].GetString_()
+		newApp.TrxnSubType = row.Columns[6].GetString_()
+		newApp.Remarks = row.Columns[7].GetString_()
 		
 		if newApp.FfId == ffId && newApp.Source == assignerOrg{
 		res2E=append(res2E,newApp)		
@@ -435,6 +451,8 @@ func (t *FFP) getAllTransaction(stub shim.ChaincodeStubInterface, args []string)
 		newApp.Source = row.Columns[3].GetString_()
 		newApp.Points = row.Columns[4].GetString_()
 		newApp.Trxntype = row.Columns[5].GetString_()
+		newApp.TrxnSubType = row.Columns[6].GetString_()
+		newApp.Remarks = row.Columns[7].GetString_()
 		
 		if newApp.FfId == ffId{
 		res2E=append(res2E,newApp)		
