@@ -178,7 +178,6 @@ func (t *SKH) Init(stub shim.ChaincodeStubInterface, function string, args []str
 		&shim.ColumnDefinition{Name: "createdBy", Type: shim.ColumnDefinition_STRING, Key: false},
 		&shim.ColumnDefinition{Name: "createdDate", Type: shim.ColumnDefinition_STRING, Key: false},
 	})
-		})
 		if err != nil {
 		return nil, errors.New("Failed creating CertificationDetails.")
 	}
@@ -223,7 +222,7 @@ if len(args) != 13 {
 			return nil, fmt.Errorf("Incorrect number of arguments. Expecting 13 . Got: %d.", len(args))
 		}
 		
-		PersonId:=args[0]
+		employeeId:=args[0]
 		title:=args[1]
 		gender:=args[2]
 		firstName:=args[3]
@@ -591,14 +590,14 @@ func (t *SKH) getQualification(stub shim.ChaincodeStubInterface, args []string) 
 	
 	for row := range rows {		
 		newApp:= new(QualificationDetails)
-		newApp.TrxId = row.Columns[0].GetString_()
-		newApp.TimeStamp = row.Columns[1].GetString_()
-		newApp.EmployeeId = row.Columns[2].GetString_()
-		newApp.Source = row.Columns[3].GetString_()
-		newApp.Skill = row.Columns[4].GetString_()
-		newApp.Trxntype = row.Columns[5].GetString_()
-		newApp.TrxnSubType = row.Columns[6].GetString_()
-		newApp.Remarks = row.Columns[7].GetString_()
+		newApp.QualificationId = row.Columns[0].GetString_()
+		newApp.EmployeeId = row.Columns[1].GetString_()
+		newApp.NameExam = row.Columns[2].GetString_()
+		newApp.NameBoardUniversity = row.Columns[3].GetString_()
+		newApp.YearPassing = row.Columns[4].GetString_()
+		newApp.MarksPercentage = row.Columns[5].GetString_()
+		newApp.CreatedBy = row.Columns[6].GetString_()
+		newApp.CreatedDate = row.Columns[7].GetString_()
 		
 		//if newApp.EmployeeId == EmployeeId && newApp.Source == assignerOrg{
 		if newApp.EmployeeId == EmployeeId{
